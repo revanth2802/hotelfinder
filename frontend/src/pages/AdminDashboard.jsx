@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 const AdminDashboard = () => {
+    const backendUrl = process.env.REACT_APP_BACKEND;
     const [users, setUsers] = useState([]);
     const [selectedRole, setSelectedRole] = useState(''); // Track selected role
     const [filteredUsers, setFilteredUsers] = useState([]);
@@ -18,7 +19,7 @@ const AdminDashboard = () => {
                     return;
                 }
 
-                const { data } = await axios.get('http://localhost:5001/api/admin/users', {
+                const { data } = await axios.get(`${backendUrl}/api/admin/users`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
@@ -31,7 +32,7 @@ const AdminDashboard = () => {
         };
 
         fetchUsers();
-    }, []);
+    }, [backendUrl]);
 
     // Filter users by role
     const handleRoleChange = (role) => {
@@ -49,7 +50,7 @@ const AdminDashboard = () => {
             }
 
             const { data } = await axios.get(
-                `http://localhost:5001/api/business-owner/restaurants-by-owner/${ownerId}`,
+                `${backendUrl}/api/business-owner/restaurants-by-owner/${ownerId}`,
                 {
                     headers: { Authorization: `Bearer ${token}` },
                 }
@@ -74,7 +75,7 @@ const AdminDashboard = () => {
             }
 
             await axios.delete(
-                `http://localhost:5001/api/business-owner/delete/${restaurantId}`,
+                `${backendUrl}/api/business-owner/delete/${restaurantId}`,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
 

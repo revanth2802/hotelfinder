@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 
 const BusinessOwnerDashboard = () => {
+    const backendUrl = process.env.REACT_APP_BACKEND;
     const [restaurants, setRestaurants] = useState([]);
     const [errorMessage, setErrorMessage] = useState('');
     const [formVisible, setFormVisible] = useState(false);
@@ -18,11 +19,7 @@ const BusinessOwnerDashboard = () => {
     const [previewImage, setPreviewImage] = useState(null);
 
     // Fetch restaurants on component load
-    useEffect(() => {
-        fetchRestaurants();
-    }, []);
-
-    const fetchRestaurants = async () => {
+    const fetchRestaurants = useCallback(async () => {
         try {
             const token = localStorage.getItem('token'); // Retrieve token from localStorage
             if (!token) {
@@ -30,7 +27,7 @@ const BusinessOwnerDashboard = () => {
                 return;
             }
 
-            const { data } = await axios.get('http://localhost:5001/api/business-owner/my-restaurants', {
+            const { data } = await axios.get(`${backendUrl}/api/business-owner/my-restaurants`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
@@ -39,7 +36,12 @@ const BusinessOwnerDashboard = () => {
             console.error('Failed to fetch restaurants:', error.response?.data || error.message);
             setErrorMessage('Failed to fetch restaurants. Please try again later.');
         }
-    };
+    }, [backendUrl]);
+
+    useEffect(() => {
+        fetchRestaurants();
+    }, [fetchRestaurants]);
+
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -72,7 +74,7 @@ const BusinessOwnerDashboard = () => {
         try {
             const token = localStorage.getItem('token');
             const { data } = await axios.post(
-                'http://localhost:5001/api/business-owner/add',
+                `${backendUrl}/api/business-owner/add`,
                 formDataObj,
                 {
                     headers: {
@@ -105,7 +107,7 @@ const BusinessOwnerDashboard = () => {
         try {
             const token = localStorage.getItem('token');
             const { data } = await axios.put(
-                `http://localhost:5001/api/business-owner/update/${formData._id}`,
+                `${backendUrl}/api/business-owner/update/${formData._id}`,
                 formDataObj,
                 {
                     headers: {
@@ -130,7 +132,7 @@ const BusinessOwnerDashboard = () => {
         try {
             const token = localStorage.getItem('token');
             const { data } = await axios.put(
-                `http://localhost:5001/api/business-owner/close/${restaurantId}`,
+                `${backendUrl}/api/business-owner/close/${restaurantId}`,
                 {},
                 {
                     headers: { Authorization: `Bearer ${token}` },
@@ -279,7 +281,7 @@ const BusinessOwnerDashboard = () => {
                             <img
                                 src={
                                     restaurant.photos?.[0]
-                                        ? `http://localhost:5001/${restaurant.photos[0]}`
+                                        ? `${backendUrl}/${restaurant.photos[0]}`
                                         : 'https://via.placeholder.com/640x480'
                                 }
                                 alt={restaurant.name || 'Restaurant image'}

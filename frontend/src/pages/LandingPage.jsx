@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -6,15 +6,16 @@ import { faUtensils } from '@fortawesome/free-solid-svg-icons';
 import RestaurantCard from '../components/RestaurantCard';
 
 const LandingPage = () => {
+  const backendUrl = process.env.REACT_APP_BACKEND;
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   // Fetch restaurants
-  const fetchGooglePlacesData = async () => {
+  const fetchGooglePlacesData = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:5001/api/places/fetch', {
+      const response = await axios.post(`${backendUrl}/api/places/fetch`, {
         location: '37.7749,-122.4194', // Example: San Jose coordinates
         radius: 5000,
       });
@@ -25,11 +26,11 @@ const LandingPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [backendUrl]);
 
   useEffect(() => {
     fetchGooglePlacesData();
-  }, []);
+  }, [fetchGooglePlacesData]);
 
   return (
     <div>

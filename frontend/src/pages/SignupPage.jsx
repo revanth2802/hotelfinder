@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 
 const SignupPage = () => {
+    const backendUrl = process.env.REACT_APP_BACKEND;
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -19,7 +20,7 @@ const SignupPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('http://localhost:5001/api/auth/register', formData);
+            await axios.post(`${backendUrl}/api/auth/register`, formData);
             setMessage('Registration successful! Redirecting to login...');
             setTimeout(() => navigate('/login'), 2000);
         } catch (error) {

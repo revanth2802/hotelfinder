@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const ProfilePage = () => {
+    const backendUrl = process.env.REACT_APP_BACKEND;
     const [user, setUser] = useState({});
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState({});
@@ -13,19 +14,19 @@ const ProfilePage = () => {
         // Fetch user data from backend
         const fetchUserProfile = async () => {
             const token = localStorage.getItem('token');
-
+    
             if (!token) {
                 navigate('/login'); // Redirect if not authenticated
                 return;
             }
-
+    
             try {
-                const { data } = await axios.get('http://localhost:5001/api/auth/profile', {
+                const { data } = await axios.get(`${backendUrl}/api/auth/profile`, {
                     headers: {
                         Authorization: `Bearer ${token}`, // Send token in Authorization header
                     },
                 });
-
+    
                 setUser(data);
                 setFormData(data); // Pre-fill form with user data
             } catch (error) {
@@ -33,9 +34,10 @@ const ProfilePage = () => {
                 setErrorMessage('Failed to load profile. Please try again later.');
             }
         };
-
+    
         fetchUserProfile();
-    }, [navigate]);
+    }, [navigate, backendUrl]); // Add backendUrl to dependencies
+    
 
     const handleInputChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -46,7 +48,7 @@ const ProfilePage = () => {
 
         try {
             const { data } = await axios.put(
-                'http://localhost:5001/api/auth/profile',
+                `${backendUrl}/api/auth/profile`,
                 formData,
                 {
                     headers: {

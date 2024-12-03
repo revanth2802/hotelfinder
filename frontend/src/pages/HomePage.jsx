@@ -2,7 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import RestaurantCard from '../components/RestaurantCard';
 
+
 const HomePage = () => {
+  const backendUrl = process.env.REACT_APP_BACKEND;
   const [restaurants, setRestaurants] = useState([]);
   const [filters, setFilters] = useState({
     name: '',
@@ -29,7 +31,7 @@ const HomePage = () => {
       if (!filtersApplied) {
         // Default Feed: Fetch using /api/places/fetch
         console.log('Fetching default restaurants using /api/places/fetch');
-        response = await axios.post('http://localhost:5001/api/places/fetch', {
+        response = await axios.post(`${backendUrl}/api/places/fetch`, {
           location: '37.335480, -121.893028', // Default location (SF)
           radius: 5000, // Customize the radius if needed
         });
@@ -44,7 +46,7 @@ const HomePage = () => {
           delete updatedFilters.city;
         }
 
-        response = await axios.post('http://localhost:5001/api/searchfilter/search', {
+        response = await axios.post(`${backendUrl}/api/searchfilter/search`, {
           filters: Object.fromEntries(
             Object.entries(updatedFilters).filter(([_, value]) => value)
           ),
@@ -63,7 +65,7 @@ const HomePage = () => {
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [backendUrl, filters]);
 
   useEffect(() => {
     fetchRestaurants();

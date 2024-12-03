@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStar, faStarHalfAlt, faStar as faStarOutline } from '@fortawesome/free-solid-svg-icons';
 
 const RestaurantDetails = () => {
+    const backendUrl = process.env.REACT_APP_BACKEND;
     const { placeId } = useParams();
     const [restaurant, setRestaurant] = useState(null);
     const [reviews, setReviews] = useState([]);
@@ -15,36 +16,37 @@ const RestaurantDetails = () => {
             console.error('No placeId provided in URL');
             return;
         }
-
+    
         const fetchDetails = async () => {
             try {
-                const response = await axios.get(`http://localhost:5001/api/restaurant/google-details/${placeId}`);
+                const response = await axios.get(`${backendUrl}/api/restaurant/google-details/${placeId}`);
                 setRestaurant(response.data);
             } catch (error) {
                 console.error('Error fetching restaurant details:', error.message);
             }
         };
-
+    
         fetchDetails();
-    }, [placeId]);
-
+    }, [placeId, backendUrl]); // Include backendUrl
+    
     useEffect(() => {
         if (!placeId) {
             console.error('No placeId provided in URL');
             return;
         }
-
+    
         const fetchReviews = async () => {
             try {
-                const response = await axios.get(`http://localhost:5001/api/reviews/${placeId}`);
+                const response = await axios.get(`${backendUrl}/api/reviews/${placeId}`);
                 setReviews(response.data || []);
             } catch (error) {
                 console.error('Error fetching reviews:', error.message);
             }
         };
-
+    
         fetchReviews();
-    }, [placeId]);
+    }, [placeId, backendUrl]); // Include backendUrl
+    
 
     const handleAddReview = async () => {
         if (!newReview.comment || newReview.rating < 1 || newReview.rating > 5) {
@@ -53,7 +55,7 @@ const RestaurantDetails = () => {
         }
 
         try {
-            const response = await axios.post(`http://localhost:5001/api/reviews/${placeId}`, newReview);
+            const response = await axios.post(`${backendUrl}/api/reviews/${placeId}`, newReview);
             const savedReview = response.data.savedReview;
 
             // Add the new review to the state

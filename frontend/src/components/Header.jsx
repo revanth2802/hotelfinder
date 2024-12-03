@@ -4,6 +4,7 @@ import axios from 'axios';
 import { FaUserCircle } from 'react-icons/fa';
 
 const Header = () => {
+    const backendUrl = process.env.REACT_APP_BACKEND;
     const [userRole, setUserRole] = useState(null); // Track user's role
     const navigate = useNavigate();
 
@@ -11,7 +12,7 @@ const Header = () => {
         const fetchUserRole = async () => {
             try {
                 const token = localStorage.getItem('token');
-                const { data } = await axios.get('http://localhost:5001/api/auth/me', {
+                const { data } = await axios.get(`${backendUrl}/api/auth/me`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setUserRole(data.role); // Set the user's role
@@ -21,8 +22,10 @@ const Header = () => {
             }
         };
 
+         // Call the function inside useEffect
         fetchUserRole();
-    }, []);
+    }, [backendUrl]); // Add backendUrl as a dependency
+
 
     const handleLogout = () => {
         localStorage.removeItem('token');
