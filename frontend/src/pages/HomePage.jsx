@@ -7,87 +7,73 @@ const HomePage = () => {
   const [filters, setFilters] = useState({
     name: '',
     category: '',
-    priceRange: '',
+    city: '',
+    zipcode: '',
     minRating: '',
   });
-  const [locationEnabled, setLocationEnabled] = useState(false);
-  const [location, setLocation] = useState({ lat: null, lng: null });
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
-  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
 
-  // Fetch user's location
-  const fetchUserLocation = useCallback(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          });
-          setLocationEnabled(true);
-        },
-        (error) => {
-          console.error('Error fetching location:', error.message);
-          setLocationEnabled(false);
-        }
-      );
-    } else {
-      console.error('Geolocation is not supported by this browser.');
-    }
-  }, []);
-
-  // Fetch restaurants
+  // Fetch restaurants from the API
   const fetchRestaurants = useCallback(async () => {
     setLoading(true);
+    setErrorMessage('');
+
     try {
       let response;
+      const filtersApplied = Object.values(filters).some((value) => value);
 
-      // Prioritize location-based fetching if enabled and valid
-      if (locationEnabled && location.lat && location.lng) {
-        response = await axios.post('http://localhost:5000/api/places/fetch', {
-          location: `${location.lat},${location.lng}`,
-          radius: 5000,
-          filters, // Include filters in the request payload
+      if (!filtersApplied) {
+        // Default Feed: Fetch using /api/places/fetch
+        console.log('Fetching default restaurants using /api/places/fetch');
+        response = await axios.post('http://localhost:5001/api/places/fetch', {
+          location: '37.335480, -121.893028', // Default location (SF)
+          radius: 5000, // Customize the radius if needed
         });
-      } else if (Object.values(filters).some((value) => value)) {
-        // Fetch restaurants based on filters
-        response = await axios.post('http://localhost:5000/api/places/search', { filters });
       } else {
-        // Fetch random restaurants as a fallback
-        response = await axios.get('http://localhost:5000/api/places/random');
+        // Filtered Feed: Fetch using /api/searchfilter/search
+        console.log('Fetching restaurants with filters:', filters);
+
+        const updatedFilters = { ...filters };
+
+        // Prioritize zipcode over city if both are present
+        if (updatedFilters.zipcode) {
+          delete updatedFilters.city;
+        }
+
+        response = await axios.post('http://localhost:5001/api/searchfilter/search', {
+          filters: Object.fromEntries(
+            Object.entries(updatedFilters).filter(([_, value]) => value)
+          ),
+        });
       }
 
-      setRestaurants(response.data);
+      // Handle response
+      if (response?.data?.length > 0) {
+        setRestaurants(response.data);
+      } else {
+        setErrorMessage('No restaurants found. Try adjusting your search filters.');
+      }
     } catch (error) {
       console.error('Error fetching restaurants:', error.message);
+      setErrorMessage('Failed to fetch restaurants. Please try again later.');
     } finally {
       setLoading(false);
     }
-  }, [filters, location, locationEnabled]);
+  }, [filters]);
 
-  // Initial effect to fetch location or random restaurants
-  useEffect(() => {
-    fetchUserLocation();
-  }, [fetchUserLocation]);
-
-  // Effect to fetch restaurants based on location, filters, or locationEnabled state
   useEffect(() => {
     fetchRestaurants();
   }, [fetchRestaurants]);
 
-  // Pagination logic
   const totalPages = Math.ceil(restaurants.length / itemsPerPage);
   const currentRestaurants = restaurants.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
-  };
 
   return (
     <div className="container my-5">
@@ -95,89 +81,102 @@ const HomePage = () => {
 
       {/* Search Filters */}
       <div className="row mb-4">
-        <div className="col-md-3">
+        <div className="col-md-2">
           <input
             type="text"
             className="form-control"
-            placeholder="Search by Name"
+            placeholder="Name"
             value={filters.name}
-            onChange={(e) => setFilters((prev) => ({ ...prev, name: e.target.value }))}
-          />
-        </div>
-        <div className="col-md-3">
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Search by Category"
-            value={filters.category}
-            onChange={(e) => setFilters((prev) => ({ ...prev, category: e.target.value }))}
+            onChange={(e) => setFilters({ ...filters, name: e.target.value })}
           />
         </div>
         <div className="col-md-2">
-          <select
+          <input
+            type="text"
             className="form-control"
-            value={filters.priceRange}
-            onChange={(e) => setFilters((prev) => ({ ...prev, priceRange: e.target.value }))}
-          >
-            <option value="">Price Range</option>
-            <option value="Low">Low</option>
-            <option value="Medium">Medium</option>
-            <option value="High">High</option>
-          </select>
+            placeholder="Category"
+            value={filters.category}
+            onChange={(e) => setFilters({ ...filters, category: e.target.value })}
+          />
+        </div>
+        <div className="col-md-2">
+          <input
+            type="text"
+            className="form-control"
+            placeholder="City"
+            value={filters.city}
+            onChange={(e) => setFilters({ ...filters, city: e.target.value })}
+          />
+        </div>
+        <div className="col-md-2">
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Zipcode"
+            value={filters.zipcode}
+            onChange={(e) => setFilters({ ...filters, zipcode: e.target.value })}
+          />
         </div>
         <div className="col-md-2">
           <input
             type="number"
             className="form-control"
-            placeholder="Min Rating"
+            placeholder="Min Rating (1-5)"
             value={filters.minRating}
-            onChange={(e) => setFilters((prev) => ({ ...prev, minRating: e.target.value }))}
+            onChange={(e) => setFilters({ ...filters, minRating: e.target.value })}
           />
         </div>
-        <div className="col-md-2">
-          <button className="btn btn-primary w-100" onClick={() => setCurrentPage(1)}>
+        <div className="col-md-2 mt-3">
+          <button className="btn btn-primary w-100" onClick={fetchRestaurants}>
             Search
           </button>
         </div>
       </div>
 
-      {/* Loading Spinner */}
+      {/* Feedback Messages */}
       {loading && <div className="text-center my-4">Loading...</div>}
+      {errorMessage && <div className="alert alert-danger my-4">{errorMessage}</div>}
 
       {/* Restaurant Cards */}
       <div className="row">
-        {currentRestaurants.map((restaurant) => (
-          <div className="col-lg-3 col-md-4 col-sm-6 mb-4" key={restaurant.id}>
-            <RestaurantCard restaurant={restaurant} />
-          </div>
-        ))}
+        {currentRestaurants.length > 0 ? (
+          currentRestaurants.map((restaurant) => (
+            <div className="col-lg-3 col-md-4 col-sm-6 mb-4" key={restaurant.id}>
+              <RestaurantCard restaurant={restaurant} />
+            </div>
+          ))
+        ) : (
+          !loading && <div className="text-center my-5">No restaurants found.</div>
+        )}
       </div>
 
       {/* Pagination */}
-      <nav className="mt-4">
-        <ul className="pagination justify-content-center">
-          <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-            <button className="page-link" onClick={() => handlePageChange(currentPage - 1)}>
-              Previous
-            </button>
-          </li>
-          {Array.from({ length: totalPages }, (_, index) => (
-            <li
-              key={index + 1}
-              className={`page-item ${currentPage === index + 1 ? 'active' : ''}`}
-            >
-              <button className="page-link" onClick={() => handlePageChange(index + 1)}>
-                {index + 1}
+      {totalPages > 1 && (
+        <nav className="mt-4">
+          <ul className="pagination justify-content-center">
+            <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+              <button className="page-link" onClick={() => setCurrentPage(currentPage - 1)}>
+                Previous
               </button>
             </li>
-          ))}
-          <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
-            <button className="page-link" onClick={() => handlePageChange(currentPage + 1)}>
-              Next
-            </button>
-          </li>
-        </ul>
-      </nav>
+            {Array.from({ length: totalPages }, (_, index) => (
+              <li
+                key={index + 1}
+                className={`page-item ${currentPage === index + 1 ? 'active' : ''}`}
+              >
+                <button className="page-link" onClick={() => setCurrentPage(index + 1)}>
+                  {index + 1}
+                </button>
+              </li>
+            ))}
+            <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+              <button className="page-link" onClick={() => setCurrentPage(currentPage + 1)}>
+                Next
+              </button>
+            </li>
+          </ul>
+        </nav>
+      )}
     </div>
   );
 };

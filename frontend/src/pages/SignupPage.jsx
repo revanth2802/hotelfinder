@@ -1,117 +1,110 @@
 import React, { useState } from 'react';
-import axios from '../utils/api';
+import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 
 const SignupPage = () => {
-  const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: '',
-    role: 'User',
-    country: '',
-    city: '',
-    zipcode: '',
-  });
-  const [error, setError] = useState('');
-  const navigate = useNavigate();
+    const [formData, setFormData] = useState({
+        name: '',
+        email: '',
+        password: '',
+        role: 'User',
+    });
+    const [message, setMessage] = useState('');
+    const navigate = useNavigate();
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
 
-  const handleSignup = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.post('/api/auth/signup', formData);
-      alert('Signup successful! Please login.');
-      navigate('/login');
-    } catch (err) {
-      setError(err.response?.data?.error || 'Signup failed!');
-    }
-  };
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            await axios.post('http://localhost:5001/api/auth/register', formData);
+            setMessage('Registration successful! Redirecting to login...');
+            setTimeout(() => navigate('/login'), 2000);
+        } catch (error) {
+            setMessage(error.response?.data?.message || 'Registration failed');
+        }
+    };
 
-  return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      <h1 className="text-2xl font-bold mb-4">Signup</h1>
-      <form className="w-80 bg-gray-100 p-4 rounded shadow" onSubmit={handleSignup}>
-        <input
-          type="text"
-          name="username"
-          placeholder="Username"
-          className="block w-full p-2 mb-4 border rounded"
-          value={formData.username}
-          onChange={handleInputChange}
-          required
-        />
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          className="block w-full p-2 mb-4 border rounded"
-          value={formData.email}
-          onChange={handleInputChange}
-          required
-        />
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          className="block w-full p-2 mb-4 border rounded"
-          value={formData.password}
-          onChange={handleInputChange}
-          required
-        />
-        <select
-          name="role"
-          className="block w-full p-2 mb-4 border rounded"
-          value={formData.role}
-          onChange={handleInputChange}
+    return (
+        <div
+            style={{
+                backgroundImage: `url("/food8.jpg")`, // Replace with your background image URL
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                minHeight: '100vh',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+            }}
         >
-          <option value="User">User</option>
-          <option value="BusinessOwner">Business Owner</option>
-          <option value="Admin">Admin</option>
-        </select>
-        <input
-          type="text"
-          name="country"
-          placeholder="Country"
-          className="block w-full p-2 mb-4 border rounded"
-          value={formData.country}
-          onChange={handleInputChange}
-        />
-        <input
-          type="text"
-          name="city"
-          placeholder="City"
-          className="block w-full p-2 mb-4 border rounded"
-          value={formData.city}
-          onChange={handleInputChange}
-        />
-        <input
-          type="text"
-          name="zipcode"
-          placeholder="Zipcode"
-          className="block w-full p-2 mb-4 border rounded"
-          value={formData.zipcode}
-          onChange={handleInputChange}
-        />
-        <button
-          type="submit"
-          className="block w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
-        >
-          Signup
-        </button>
-      </form>
-      {error && <p className="text-red-500 mt-4">{error}</p>}
-      <p className="mt-4">
-        Already have an account?{' '}
-        <Link to="/login" className="text-blue-500 hover:underline">
-          Login
-        </Link>
-      </p>
-    </div>
-  );
+            <div
+                className="card p-4 shadow"
+                style={{
+                    maxWidth: '400px',
+                    width: '100%',
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)', // Semi-transparent background
+                    borderRadius: '10px',
+                }}
+            >
+                <h1 className="text-center mb-4">Sign Up</h1>
+                <form onSubmit={handleSubmit}>
+                    <div className="mb-3">
+                        <label className="form-label">Name</label>
+                        <input
+                            type="text"
+                            name="name"
+                            placeholder="Enter your name"
+                            className="form-control"
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+                    <div className="mb-3">
+                        <label className="form-label">Email</label>
+                        <input
+                            type="email"
+                            name="email"
+                            placeholder="Enter your email"
+                            className="form-control"
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+                    <div className="mb-3">
+                        <label className="form-label">Password</label>
+                        <input
+                            type="password"
+                            name="password"
+                            placeholder="Enter your password"
+                            className="form-control"
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+                    <div className="mb-3">
+                        <label className="form-label">Role</label>
+                        <select
+                            name="role"
+                            className="form-select"
+                            onChange={handleChange}
+                            required
+                        >
+                            <option value="User">User</option>
+                            <option value="BusinessOwner">Business Owner</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+                    </div>
+                    <button type="submit" className="btn btn-primary w-100">Sign Up</button>
+                    <p className="text-center text-muted mt-3">{message}</p>
+                </form>
+                <div className="text-center mt-3">
+                    <Link to="/login" className="text-primary">Login?</Link>
+                </div>
+            </div>
+        </div>
+    );
 };
 
 export default SignupPage;

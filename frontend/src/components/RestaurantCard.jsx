@@ -7,13 +7,12 @@ const RestaurantCard = ({ restaurant }) => {
   const navigate = useNavigate();
 
   const handleCardClick = () => {
-    navigate(`/restaurants/${restaurant.id}`, { state: { restaurant } });
+    navigate(`/restaurant/${restaurant.id}`, { state: { restaurant } });
   };
-  
 
   const renderStars = () => {
-    const fullStars = Math.floor(restaurant.ratings || 0); // Full stars
-    const halfStar = (restaurant.ratings || 0) % 1 >= 0.5 ? 1 : 0; // Half star
+    const fullStars = Math.floor(restaurant.rating || 0); // Full stars
+    const halfStar = restaurant.rating % 1 >= 0.5 ? 1 : 0; // Half star
     const emptyStars = 5 - fullStars - halfStar; // Empty stars
 
     return (
@@ -42,6 +41,12 @@ const RestaurantCard = ({ restaurant }) => {
       </>
     );
   };
+  
+  const extractCity = (address) => {
+    if (!address) return 'N/A';
+    const addressParts = address.split(',').map((part) => part.trim());
+    return addressParts[addressParts.length - 3] || addressParts[0] || 'N/A';
+    };
 
   return (
     <div
@@ -49,7 +54,6 @@ const RestaurantCard = ({ restaurant }) => {
       onClick={handleCardClick}
       style={{ cursor: 'pointer' }}
     >
-      {/* Restaurant Image */}
       <img
         src={restaurant.imageUrl || 'https://via.placeholder.com/640x480'}
         className="card-img-top"
@@ -58,22 +62,20 @@ const RestaurantCard = ({ restaurant }) => {
       />
       <div className="card-body">
         <h5 className="card-title">{restaurant.name}</h5>
+        <p className="card-text">{restaurant.address}</p>
         <p className="card-text">
-          {restaurant.address}, {restaurant.city}, {restaurant.state}, {restaurant.zip}
+          <strong>City:</strong> {extractCity(restaurant.address)}
         </p>
         <p className="card-text">
-          <strong>Category:</strong> {restaurant.categories}
+          <strong>Category:</strong> {restaurant.categories.join(', ')}
         </p>
         <p className="card-text">
-          <strong>Price:</strong> {restaurant.priceRange}
         </p>
-        <p className="card-text">
           <strong>Rating:</strong>
           <div className="d-flex align-items-center">
             {renderStars()}
-            <span className="ms-2">{restaurant.ratings} / 5</span>
+            <span className="ms-2">{restaurant.rating} / 5</span>
           </div>
-        </p>
         
       </div>
     </div>

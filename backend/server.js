@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const morgan = require('morgan');
+const fs = require('fs');
 
 // Load environment variables
 dotenv.config();
@@ -25,10 +26,17 @@ if (!process.env.PORT) {
 // Initialize Express app
 const app = express();
 
+const uploadsDir = 'uploads';
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir);
+}
+
 // Middleware
 app.use(cors()); // Enable Cross-Origin Resource Sharing
 app.use(express.json()); // Parse incoming JSON requests
 app.use(morgan('dev')); // Log HTTP requests
+app.use('/uploads', express.static('uploads'));
+
 
 // Database connection
 mongoose
@@ -43,12 +51,16 @@ mongoose
   });
 
 // Define routes
+
+
 app.use('/api/auth', require('./routes/authRoutes'));
-app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/reviews', require('./routes/reviewRoutes'));
-app.use('/api/business', require('./routes/businessRoutes'));
-app.use('/api/restaurants', require('./routes/restaurantRoutes'));
+app.use('/api/restaurant', require('./routes/restaurantRoutes'));
+app.use('/api/searchfilter', require('./routes/searchRoutes'));
 app.use('/api/places', require('./routes/placesRoutes')); // Added Google Places API route
+app.use('/api/admin', require('./routes/adminRoutes'));
+app.use('/api/business-owner', require('./routes/businessOwnerRoutes'));
+app.use('/api/auth', require('./routes/profileRoutes') );
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -64,7 +76,7 @@ app.use('*', (req, res) => {
 });
 
 // Start the server
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

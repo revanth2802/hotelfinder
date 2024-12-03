@@ -1,22 +1,24 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faUtensils } from '@fortawesome/free-solid-svg-icons';
 import RestaurantCard from '../components/RestaurantCard';
 
 const LandingPage = () => {
   const [restaurants, setRestaurants] = useState([]);
-  const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(false);
-  const scrollContainerRef = useRef(null);
+  const navigate = useNavigate();
 
   // Fetch restaurants
   const fetchGooglePlacesData = async () => {
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:5000/api/places/fetch', {
-        location: '37.7749,-122.4194', // Example: San Francisco coordinates
+      const response = await axios.post('http://localhost:5001/api/places/fetch', {
+        location: '37.7749,-122.4194', // Example: San Jose coordinates
         radius: 5000,
       });
-      setRestaurants(response.data.slice(0, 8)); // Ensure slice is only called on a valid array
+      setRestaurants(response.data.slice(0, 8));
     } catch (error) {
       console.error('Error fetching Google Places data:', error.message);
       setRestaurants([]);
@@ -25,34 +27,8 @@ const LandingPage = () => {
     }
   };
 
-  // Fetch real-time reviews
-  const fetchRealTimeReviews = async () => {
-    try {
-      const response = await axios.get('http://localhost:5000/api/reviews');
-      setReviews(response.data.slice(0, 12)); // Ensure slice is only called on a valid array
-    } catch (error) {
-      console.error('Error fetching reviews:', error.message);
-      setReviews([]);
-    }
-  };
-
   useEffect(() => {
     fetchGooglePlacesData();
-    fetchRealTimeReviews();
-  }, []);
-
-  // Automatic Scrolling Logic
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      if (scrollContainerRef.current) {
-        scrollContainerRef.current.scrollBy({
-          left: 1, // Adjust the speed of the scroll here
-          behavior: 'smooth',
-        });
-      }
-    }, 20); // Set interval for smooth scrolling
-
-    return () => clearInterval(intervalId); // Cleanup the interval on component unmount
   }, []);
 
   return (
@@ -61,7 +37,7 @@ const LandingPage = () => {
       <section className="hero-section mb-5">
         <div id="carouselExample" className="carousel slide" data-bs-ride="carousel">
           <div className="carousel-inner">
-            {['food1.jpg', 'food2.jpg', 'food3.jpg', 'food4.jpg'].map((image, index) => (
+            {['food2.jpg', 'food3.jpg', 'food4.jpg'].map((image, index) => (
               <div key={index} className={`carousel-item ${index === 0 ? 'active' : ''}`}>
                 <img
                   src={`/${image}`}
@@ -97,60 +73,73 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Popular Restaurants Section */}
-      {/* Popular Restaurants Section */}
-<section className="restaurant-section py-5">
-  <h2 className="text-center mb-4">Popular Restaurants</h2>
-  {loading && <div className="text-center my-4">Loading...</div>}
-  <div
-    className="container-fluid"
-    ref={scrollContainerRef}
-    style={{
-      display: 'flex',
-      overflowX: 'hidden', // Hide the scroll bar
-      whiteSpace: 'nowrap',
-      scrollBehavior: 'smooth',
-      position: 'relative', // Ensure proper positioning for the content
-    }}
-  >
-    {restaurants.map((restaurant) => (
-      <div
-        key={restaurant.id || restaurant.name}
-        className="me-3"
-        style={{ minWidth: '250px', display: 'inline-block' }}
-      >
-        <RestaurantCard restaurant={restaurant} />
-      </div>
-    ))}
-  </div>
-</section>
+      {/* About Section */}
+      <section className="about-section text-center py-4">
+        <div className="container">
+          <p className="lead">
+            "Welcome to <strong>Restaurant Finder</strong>, your ultimate destination for discovering the best
+            dining experiences around. Whether you're in the mood for gourmet meals, casual dining, or hidden
+            gems, we help you find the perfect spot. Start your culinary adventure with us!"
+          </p>
+          <button
+            className="btn btn-light btn-lg d-inline-flex align-items-center mt-3"
+            style={{
+              backgroundColor: '#469361 ',
+              border: 'none',
+              color: '#fff',
+              borderRadius: '25px',
+              padding: '10px 20px',
+              fontSize: '1.2rem',
+              fontWeight: 'bold',
+              boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
+            }}
+            onClick={() => navigate('/find')}
+          >
+            <FontAwesomeIcon icon={faUtensils} className="me-2" />
+            Find Your Restaurant
+          </button>
+        </div>
+      </section>
 
-
-      {/* Real-Time Reviews Section */}
-      <section className="reviews-section py-5">
-        <h2 className="text-center mb-4">Real-Time Reviews</h2>
+      {/* Popular Restaurants Section */}
+      <section className="restaurant-section py-5">
+        <h2 className="text-center mb-4">Popular Restaurants</h2>
+        {loading && <div className="text-center my-4">Loading...</div>}
         <div className="container">
           <div className="row">
-            {reviews.map((review, index) => (
-              <div className="col-lg-3 col-md-4 col-sm-6 mb-4" key={index}>
-                <div className="card h-100 shadow-sm">
-                  <div className="card-body">
-                    <h5 className="card-title">{review.user || 'Anonymous'}</h5>
-                    <p className="card-text">{review.comment || 'No comment provided.'}</p>
-                    <div className="d-flex align-items-center">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <i
-                          key={i}
-                          className={`bi ${i < review.rating ? 'bi-star-fill' : 'bi-star'}`}
-                          style={{ color: '#ffc107', marginRight: '4px' }}
-                        ></i>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+            {restaurants.map((restaurant, index) => (
+              <div
+                key={restaurant.id || restaurant.name}
+                className="col-lg-3 col-md-4 col-sm-6 mb-4"
+              >
+                <RestaurantCard restaurant={restaurant} />
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Restaurant Description Section 1 */}
+      <section className="description-section py-5">
+        <div className="container">
+          <h2 className="text-center mb-4">Discover Culinary Excellence</h2>
+          <p className="text-center lead">
+            At Restaurant Finder, we bring you an extensive list of top-rated dining spots.
+            Explore a wide variety of cuisines, from authentic local delicacies to global gourmet flavors.
+            Every restaurant in our directory is carefully curated to offer you an unforgettable dining experience.
+          </p>
+        </div>
+      </section>
+
+      {/* Restaurant Description Section 2 */}
+      <section className="description-section py-5 bg-light">
+        <div className="container">
+          <h2 className="text-center mb-4">Your Dining Experience Simplified</h2>
+          <p className="text-center lead">
+            Looking for a place to celebrate, relax, or simply enjoy a meal? Restaurant Finder
+            provides real-time information on menus, pricing, ambiance, and user reviews to help
+            you make an informed decision. Let us guide you to your next favorite dining spot!
+          </p>
         </div>
       </section>
 

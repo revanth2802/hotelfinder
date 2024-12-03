@@ -1,56 +1,86 @@
 import React, { useState } from 'react';
-import axios from '../utils/api';
-import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { useNavigate, Link } from 'react-router-dom';
 
 const LoginPage = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const navigate = useNavigate();
+    const [formData, setFormData] = useState({ email: '', password: '' });
+    const [message, setMessage] = useState('');
+    const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await axios.post('/api/auth/login', { email, password });
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-      alert('Login successful!');
-      navigate('/profile');
-    } catch (err) {
-      setError(err.response?.data?.error || 'Login failed!');
-    }
-  };
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
 
-  return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      <h1 className="text-2xl font-bold mb-4">Login</h1>
-      <form className="w-80 bg-gray-100 p-4 rounded shadow" onSubmit={handleLogin}>
-        <input
-          type="email"
-          placeholder="Email"
-          className="block w-full p-2 mb-4 border rounded"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          className="block w-full p-2 mb-4 border rounded"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <button
-          type="submit"
-          className="block w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const { data } = await axios.post('http://localhost:5001/api/auth/login', formData);
+            localStorage.setItem('token', data.token);
+            setMessage('Login successful! Redirecting...');
+            setTimeout(() => {
+                if (data.user.role === 'User') navigate('/');
+                if (data.user.role === 'BusinessOwner') navigate('/busowner-dashboard');
+                if (data.user.role === 'Admin') navigate('/admin-dashboard');
+            }, 2000);
+        } catch (error) {
+            setMessage(error.response?.data?.message || 'Login failed');
+        }
+    };
+
+    return (
+        <div
+            style={{
+                backgroundImage: `url("/food9.jpg")`, // Replace with your background image URL
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                minHeight: '100vh',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+            }}
         >
-          Login
-        </button>
-      </form>
-      {error && <p className="text-red-500 mt-4">{error}</p>}
-    </div>
-  );
+            <div
+                className="card p-4 shadow"
+                style={{
+                    maxWidth: '400px',
+                    width: '100%',
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)', // Semi-transparent background
+                    borderRadius: '10px',
+                }}
+            >
+                <h1 className="text-center mb-4">Login</h1>
+                <form onSubmit={handleSubmit}>
+                    <div className="mb-3">
+                        <label className="form-label">Email</label>
+                        <input
+                            type="email"
+                            name="email"
+                            placeholder="Enter your email"
+                            className="form-control"
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+                    <div className="mb-3">
+                        <label className="form-label">Password</label>
+                        <input
+                            type="password"
+                            name="password"
+                            placeholder="Enter your password"
+                            className="form-control"
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+                    <button type="submit" className="btn btn-primary w-100">Login</button>
+                    <p className="text-center text-muted mt-3">{message}</p>
+                </form>
+                <div className="text-center mt-3">
+                    <Link to="/signup" className="text-primary">Signup?</Link>
+                </div>
+            </div>
+        </div>
+    );
 };
 
 export default LoginPage;
